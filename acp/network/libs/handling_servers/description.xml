@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<library name="acp.network.libs.handling_servers">
+	<description>Library with helper classes for managing clients of a server and handling them with associated protocol.</description>
+</library>

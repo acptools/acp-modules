@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<library name="acp.network.libs.format_printers">
+	<description>Library with helper classes for printing data in a specified format.</description>
+	<includes>
+		<include>FormatPrinters.h</include>
+	</includes>
+	<namespaces>
+		<namespace>acp_network_libs_format_printers</namespace>
+	</namespaces>
+</library>

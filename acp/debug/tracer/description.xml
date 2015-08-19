@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<component-type name="acp.debug.tracer">
+	<description>Tracing support for acp modules and libraries.</description>
+	<view>
+		<includes>
+			<include>Tracer.h</include>
+		</includes>
+		<class>acp_debug_tracer::TTracer</class>
+	</view>
+</component-type>

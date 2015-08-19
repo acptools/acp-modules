@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<library name="acp.utils.analog">
+	<description>Helper function for reading analog inputs.</description>
+	<includes>
+		<include>AnalogUtils.h</include>	
+	</includes>
+	<namespaces>
+		<namespace>acp_utils</namespace>
+	</namespaces>
+</library>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<component-type name="acp.serial.rs485_sw_serial">
+	<description>RS485 stream over a software serial.</description>
+	<dependencies>
+		<arduino-library>SoftwareSerial</arduino-library>
+	</dependencies>
+	<view>
+		<includes>
+			<include>rs485swserial.h</include>
+		</includes>
+		<class>acp_serial_rs48_sw_serial::TSoftwareRS485Serial</class>
+		<constructor-args>
+			<arg type="property">RxPin</arg>
+			<arg type="property">TxPin</arg>
+			<arg type="property">EnablePin</arg>
+			<arg type="property">BaudRate</arg>
+		</constructor-args>
+	</view>
+	<properties>
+		<property>
+			<name>RxPin</name>
+			<type>pin</type>
+		</property>
+		<property>
+			<name>TxPin</name>
+			<type>pin</type>
+		</property>
+		<property>
+			<name>EnablePin</name>
+			<type>pin</type>
+		</property>
+		<property>
+			<name>BaudRate</name>
+			<type>unsigned long</type>
+		</property>				
+	</properties>
+</component-type>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<library name="acp.utils.strings">
+	<description>Helper function for manipulating strings.</description>
+	<includes>
+		<include>StringUtils.h</include>	
+	</includes>
+	<namespaces>
+		<namespace>acp_utils</namespace>
+	</namespaces>
+</library>

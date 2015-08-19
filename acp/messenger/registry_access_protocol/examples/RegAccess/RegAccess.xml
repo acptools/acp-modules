@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<project platform="ArduinoMega">
+	<program>
+		<events>
+			<event name="OnStart">onStart</event>
+		</events>
+	</program>
+	
+	<components>	
+		<component>
+			<name>messenger</name>
+			<type>acp.messenger.gep_stream_messenger</type>
+			<events>
+				<event name="OnMessageReceived">onMessageReceived</event>
+			</events>
+		</component>	
+		
+		<component>
+			<name>registryProtocol</name>
+			<type>acp.messenger.registry_access_protocol</type>
+			<events>
+				<event name="OnWriteRegister">onWriteRegister</event>
+				<event name="OnReadRegister">onReadRegister</event>
+			</events>
+		</component>	
+	</components>
+	
+</project>

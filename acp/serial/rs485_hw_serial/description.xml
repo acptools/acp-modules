@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<component-type name="acp.serial.rs485_hw_serial">
+	<description>RS485 stream over a hardware serial.</description>
+	<view>
+		<includes>
+			<include>rs485hwserial.h</include>
+		</includes>
+		<class>acp_serial_rs48_hw_serial::THardwareRS485Serial</class>
+		<constructor-args>
+			<arg type="property">Serial</arg>
+			<arg type="property">EnablePin</arg>
+			<arg type="property">BaudRate</arg>
+		</constructor-args>
+	</view>
+	<properties>
+		<property>
+			<name>Serial</name>
+			<type>hardware-serial</type>
+		</property>
+		<property>
+			<name>EnablePin</name>
+			<type>pin</type>
+		</property>
+		<property>
+			<name>BaudRate</name>
+			<type>unsigned long</type>
+		</property>				
+	</properties>
+</component-type>

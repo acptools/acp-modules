@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<library name="acp.display.libs.basic_hw_types">
+	<description>Library implementing communication with some basic hardware types of LCDs (including display with I2C interface).</description>
+</library>

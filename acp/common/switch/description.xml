@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<component-type name="acp.common.switch">
+	<description>Simple switch on a digital pin.</description>
+	<view>
+		<includes>
+			<include>Switch.h</include>
+		</includes>
+		<class>acp_common_switch::TSwitch</class>
+		<constructor-args>
+			<arg type="property">Pin</arg>
+			<arg type="property">InitialState</arg>
+			<arg type="property">InvertedLogic</arg>
+		</constructor-args>
+	</view>
+	<properties>
+		<property>
+			<name>Pin</name>
+			<type>pin</type>
+		</property>
+		<property>
+			<name>InitialState</name>
+			<type>bool</type>
+			<value type="default">false</value>
+		</property>
+		<property>
+			<name>InvertedLogic</name>
+			<type>bool</type>
+			<value type="default">false</value>
+		</property>		
+	</properties>
+</component-type>

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<component-type name="acp.common.measured_switch">
+	<description>Simple switch on a digital pin with measuring of total duration of the "ON" state in seconds.</description>
+	<view>
+		<includes>
+			<include>MeasuredSwitch.h</include>
+		</includes>
+		<class>acp_common_measured_switch::TMeasuredSwitch</class>
+		<constructor-args>
+			<arg type="property">Pin</arg>
+			<arg type="property">InitialState</arg>
+			<arg type="property">InvertedLogic</arg>
+		</constructor-args>
+	</view>
+	<properties>
+		<property>
+			<name>Pin</name>
+			<type>pin</type>
+		</property>
+		<property>
+			<name>InitialState</name>
+			<type>bool</type>
+			<value type="default">false</value>
+		</property>
+		<property>
+			<name>InvertedLogic</name>
+			<type>bool</type>
+			<value type="default">false</value>
+		</property>		
+	</properties>
+</component-type>

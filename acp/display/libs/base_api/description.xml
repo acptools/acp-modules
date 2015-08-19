@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<library name="acp.display.libs.base_api">
+	<description>Library with basic implementation of a lcd components.</description>
+</library>

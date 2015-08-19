@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<project platform="ArduinoUno">
+	<components>	
+		<component>
+			<name>blinkTimer</name>
+			<type>acp.common.timer</type>
+			<events>
+				<event name="OnTick">onBlink</event>
+			</events>
+			<properties>
+				<property name="Interval">1000</property>
+			</properties>
+		</component>
+
+		<component>
+			<name>led</name>
+			<type>acp.common.switch</type>
+			<properties>
+				<property name="Pin">13</property>
+			</properties>
+		</component>		
+	</components>	
+</project>

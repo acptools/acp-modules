@@ -153,7 +153,7 @@ namespace acp_messenger_gep_stream {
 
 				// After receiving the message start byte, the receive of the message is restarted
 				if (dataByte == MESSAGE_START_BYTE) {
-					state == WAIT_START;
+					state = WAIT_START;
 				}
 
 				if ((state == WAIT_START) && (dataByte == MESSAGE_START_BYTE)) {

@@ -9,9 +9,19 @@
 		<constructor-args>
 			<arg type="property">Serial</arg>
 			<arg type="property">EnablePin</arg>
-			<arg type="property">BaudRate</arg>
 		</constructor-args>
 	</view>
+	<controller>
+		<includes>
+			<include>rs485hwserial.h</include>
+		</includes>
+		<class>acp_serial_rs48_hw_serial::HardwareRS485SerialController</class>
+		<init>
+			<method>initHWSerial</method>
+			<arg type="property">Serial</arg>
+			<arg type="property">BaudRate</arg>
+		</init>
+	</controller>
 	<properties>
 		<property>
 			<name>Serial</name>

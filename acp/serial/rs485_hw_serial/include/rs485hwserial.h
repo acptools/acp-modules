@@ -17,11 +17,10 @@ namespace acp_serial_rs48_hw_serial {
 		const uint8_t enablePin;
 	public:
 		//--------------------------------------------------------------------------------
-		// Constructs rs485 stream over a softare serial.
-		THardwareRS485Serial(HardwareSerial &hwSerial, uint8_t enablePin, long speed): hwSerial(hwSerial), enablePin(enablePin) {
+		// Constructs rs485 stream over a software serial.
+		THardwareRS485Serial(HardwareSerial &hwSerial, uint8_t enablePin): hwSerial(hwSerial), enablePin(enablePin) {
 			pinMode(enablePin, OUTPUT);
 			digitalWrite(enablePin, LOW);
-			hwSerial.begin(speed);
 		}
 
 		//--------------------------------------------------------------------------------
@@ -67,6 +66,16 @@ namespace acp_serial_rs48_hw_serial {
 		}
 	};
 
+
+	/*********************************************************************************
+	 * Initializer for a hardware (UART) serial
+	 ********************************************************************************/
+	class HardwareRS485SerialController {
+	public:
+		inline void initHWSerial(HardwareSerial &hwSerial, unsigned long baud) {
+			hwSerial.begin(baud);
+		}
+	};
 }
 
 #endif /* MODULES_ACP_SERIAL_RS485_HW_SERIAL_INCLUDE_RS485HWSERIAL_H_ */

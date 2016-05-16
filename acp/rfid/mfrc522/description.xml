@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<component-type name="acp.rfid.mfrc522">
+	<description>MFRC522 - MIFARE card reader.</description>
+	<dependencies>
+		<arduino-library>SPI</arduino-library>
+	</dependencies>
+	<view>
+		<includes>
+			<include>MFRC522.h</include>
+		</includes>
+		<class>MFRC522</class>
+		<constructor-args>
+			<arg type="property">ChipSelectPin</arg>
+			<arg type="property">ResetPin</arg>
+		</constructor-args>
+	</view>
+	<properties>
+		<property>
+			<name>ChipSelectPin</name>
+			<type>digital-pin</type>
+		</property>
+		<property>
+			<name>ResetPin</name>
+			<type>digital-pin</type>
+		</property>
+	</properties>
+</component-type>

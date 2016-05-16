@@ -19,10 +19,10 @@ namespace acp_serial_rs48_sw_serial {
 	public:
 		//--------------------------------------------------------------------------------
 		// Constructs rs485 stream over a softare serial.
-		TSoftwareRS485Serial(uint8_t rxPin, uint8_t txPin, uint8_t enablePin, long speed): swSerial(rxPin, txPin), enablePin(enablePin) {
+		TSoftwareRS485Serial(uint8_t rxPin, uint8_t txPin, uint8_t enablePin, unsigned long baud): swSerial(rxPin, txPin), enablePin(enablePin) {
 			pinMode(enablePin, OUTPUT);
 			digitalWrite(enablePin, LOW);
-			swSerial.begin(speed);
+			swSerial.begin(baud);
 		}
 
 		//--------------------------------------------------------------------------------

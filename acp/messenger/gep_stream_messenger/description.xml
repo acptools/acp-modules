@@ -7,6 +7,7 @@
 		</includes>
 		<class>acp_messenger_gep_stream::TGEPStreamMessenger</class>
 		<template-args>
+			<arg type="property">MessengerId</arg>
 			<arg type="property">MaxMessageSize</arg>
 		</template-args>
 		<constructor-args>
@@ -19,6 +20,7 @@
 		</includes>
 		<class>acp_messenger_gep_stream::GEPStreamController</class>
 		<template-args>
+			<arg type="property">MessengerId</arg>
 			<arg type="property">MaxMessageSize</arg>
 		</template-args>
 		<loop>
@@ -26,6 +28,12 @@
 		</loop>
 	</controller>
 	<properties>
+		<property>
+			<name>MessengerId</name>
+			<type min="0" max="15">int</type>
+			<value type="default">0</value>
+			<description>Identifier of the messenger applied to filter received messages. If the identifier is 0, all messages are received.</description>
+		</property>
 		<property>
 			<name>MaxMessageSize</name>
 			<type min="1" max="2000">int</type>

@@ -16,10 +16,15 @@ long registerValues[REGISTER_SIZE];
 // Special register with id 1000
 long specialRegister = 0;
 
+// Sample binary register
+#define BINARY_REGISTER_ID 50
+#define BINARY_REGISTER_SIZE 20
+char binaryRegister[BINARY_REGISTER_SIZE] = "Binary register";
+
 //----------------------------------------------------------------------
 // Event callback for Program.OnStart
 void onStart() {
-  Serial.begin(33600);
+  Serial.begin(9600);
   messenger.setStream(Serial); 
   
   // Initialize register values
@@ -40,25 +45,26 @@ void onStart() {
 //----------------------------------------------------------------------
 // Event callback for messenger.OnMessageReceived
 void onMessageReceived(const char* message, int messageLength, long messageTag) {
-  char response[10];
-  int responseSize = 10;
+  char response[100];
+  int responseSize = 100;
   registryProtocol.handleRequest(message, messageLength, response, responseSize);
   if (responseSize == 0) {
     return;
   }
 
   if (messageTag >= 0) {
-    messenger.sendMessage(response, responseSize, messageTag); 
+    messenger.sendMessage(0, response, responseSize, messageTag); 
   } else {
-    messenger.sendMessage(response, responseSize); 
+    messenger.sendMessage(0, response, responseSize); 
   }
 }
 
 //----------------------------------------------------------------------
-// Event callback for registryProtocol.OnWriteRegister
-bool onWriteRegister(unsigned int registerId, long value) {
+// Event callback for registryProtocol.OnWriteIntRegister
+bool onWriteIntRegister(unsigned int registerId, long value) {
   if ((registerId >= 0) && (registerId < REGISTER_SIZE)) {
     registerValues[registerId] = value;
+    registryProtocol.markModifiedRegister(registerId);
     return true;
   }
   
@@ -71,8 +77,8 @@ bool onWriteRegister(unsigned int registerId, long value) {
 }
 
 //----------------------------------------------------------------------
-// Event callback for registryProtocol.OnReadRegister
-long onReadRegister(unsigned int registerId) {
+// Event callback for registryProtocol.OnReadIntRegister
+long onReadIntRegister(unsigned int registerId) {
    if ((registerId >= 0) && (registerId < REGISTER_SIZE)) {
       return registerValues[registerId];
    }
@@ -82,4 +88,27 @@ long onReadRegister(unsigned int registerId) {
    }
    
    return 0;
+}
+
+//----------------------------------------------------------------------
+// Event callback for registryProtocol.OnWriteBinRegister
+bool onWriteBinRegister(unsigned int registerId, const char* data, int dataLength) {
+  if ((registerId == BINARY_REGISTER_ID) && (dataLength < BINARY_REGISTER_SIZE)) {
+    memcpy(binaryRegister, data, dataLength);
+    binaryRegister[dataLength] = 0;
+    return true;
+  }
+	
+  return false;	
+}
+
+//----------------------------------------------------------------------
+// Event callback for registryProtocol.OnReadBinRegister
+int onReadBinRegister(unsigned int registerId, char* dstBuffer, int dstBufferSize) {
+  if ((registerId == BINARY_REGISTER_ID) && (BINARY_REGISTER_SIZE <= dstBufferSize))  {
+    memcpy(dstBuffer, binaryRegister, BINARY_REGISTER_SIZE);
+    return BINARY_REGISTER_SIZE;
+  }
+	
+  return -1; 		
 }

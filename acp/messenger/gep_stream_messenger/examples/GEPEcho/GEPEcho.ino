@@ -31,11 +31,11 @@ void onMessageReceived(const char* message, int messageLength, long messageTag) 
     reply[2*i+1] = message[i];
   }
    
-  // Reply with message 
+  // Reply with a broadcasted message (destinationId is set to 0) 
   if (messageTag >= 0) { 
-    messenger.sendMessage(reply, messageLength*2, messageTag);
+    messenger.sendMessage(0, reply, messageLength*2, messageTag);
   } else {
-    messenger.sendMessage(reply, messageLength*2);  
+    messenger.sendMessage(0, reply, messageLength*2);  
   }
 }
 

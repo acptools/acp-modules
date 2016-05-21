@@ -5,7 +5,7 @@
 
 namespace acp_messenger_gep_stream {
 
-	template <int MAX_MESSAGE_SIZE> class TGEPStreamMessenger;
+	template <int MESSENGER_ID, int MAX_MESSAGE_SIZE> class TGEPStreamMessenger;
 
 	// Byte indicating start of a new message
 	const uint8_t MESSAGE_START_BYTE = 0x0C;
@@ -20,11 +20,14 @@ namespace acp_messenger_gep_stream {
 	 * Controller for a stream messenger using a GEP protocol: error checking protocol
 	 * based on http://www.gammon.com.au/forum/?id=11428
 	 ********************************************************************************/
-	template<int MAX_MESSAGE_SIZE> class GEPStreamController {
-		friend class TGEPStreamMessenger<MAX_MESSAGE_SIZE>;
+	template<int MESSENGER_ID, int MAX_MESSAGE_SIZE> class GEPStreamController {
+		friend class TGEPStreamMessenger<MESSENGER_ID, MAX_MESSAGE_SIZE>;
 	private:
-		// Communication stream for sending and receiving messages.
+		// Communication stream for sending and receiving messages
 		Stream* stream;
+
+		// Destination ID of the received message
+		uint8_t messageDestinationId;
 
 		// Buffer for receiving messages
 		uint8_t message[MAX_MESSAGE_SIZE+2];
@@ -33,7 +36,7 @@ namespace acp_messenger_gep_stream {
 		int messageLength;
 
 		// State of the receive process
-		enum {WAIT_START, WAIT_MESSAGE_BYTE_HIGH, WAIT_MESSAGE_BYTE_LOW, WAIT_CRC, WAIT_CRC_WITH_TAG, MESSAGE_RECEIVED, MESSAGE_RECEIVED_WITH_TAG}state;
+		enum {WAIT_START, WAIT_DESTINATION_ID, WAIT_MESSAGE_BYTE_HIGH, WAIT_MESSAGE_BYTE_LOW, WAIT_CRC, WAIT_CRC_WITH_TAG, MESSAGE_RECEIVED, MESSAGE_RECEIVED_WITH_TAG}state;
 
 		//--------------------------------------------------------------------------------
 		// Computes CRC checksum of given data
@@ -74,14 +77,25 @@ namespace acp_messenger_gep_stream {
 		}
 
 		//--------------------------------------------------------------------------------
-		// Sends a message (if tag is negative, no tag is attached to the message)
-		void sendMessage(const char* message, int messageLength, long tag) {
+		// Sends a message (if tag is negative, no tag is attached to the message). If destination ID is 0, message is broadcasted.
+		void sendMessage(uint8_t destinationId, const char* message, int messageLength, long tag) {
 			if ((stream == NULL) || (messageLength < 0) || ((messageLength > 0) && (message == NULL))) {
 				return;
 			}
 
+			// Accumulator for crc checksum
+			uint8_t crcChecksum = 0;
+
+			// Encode receiver ID and update crc-checksum accordingly
+			if (destinationId >= 16) {
+				destinationId = 0;
+			}
+			crcChecksum = computeCRC8(crcChecksum, &destinationId, 1);
+			destinationId = (destinationId << 4) | (destinationId ^ 0x0F);
+
 			// Send encoded message content
 			stream->write(MESSAGE_START_BYTE);
+			stream->write(destinationId);
 			const char* msgPtr = message;
 			for (int i=0; i<messageLength; i++) {
 				sendByte(*msgPtr);
@@ -89,7 +103,7 @@ namespace acp_messenger_gep_stream {
 			}
 
 			// Compute CRC checksum
-			uint8_t crcChecksum = computeCRC8(0, (const uint8_t*)message, messageLength);
+			crcChecksum = computeCRC8(crcChecksum, (const uint8_t*)message, messageLength);
 
 			// Send tail of message (eventually with encoded tag)
 			if (tag < 0) {
@@ -118,6 +132,7 @@ namespace acp_messenger_gep_stream {
 			stream = NULL;
 			messageReceivedEvent = NULL;
 			state = WAIT_START;
+			messageLength = 0;
 		}
 
 		//--------------------------------------------------------------------------------
@@ -129,10 +144,17 @@ namespace acp_messenger_gep_stream {
 					break;
 				}
 
+				// Ignore all bytes received in state WAIT_START different than MESSAGE_START_BYTE
+				if ((state == WAIT_START) && (dataByte != MESSAGE_START_BYTE)) {
+					continue;
+				}
+
 				// Process waiting - we change state to WAIT_START or break the loop (if a correct message is received)
+				// CRC byte must be processed before other actions, indeed, the value of this byte can be MESSAGE_START_BYTE
 				if ((state == WAIT_CRC) || (state == WAIT_CRC_WITH_TAG)) {
 					// Check CRC of received data
-					if (dataByte != computeCRC8(0, (const byte*)message, messageLength)) {
+					const uint8_t crcInitialValue = computeCRC8(0, &messageDestinationId, 1);
+					if (dataByte != computeCRC8(crcInitialValue, (const byte*)message, messageLength)) {
 						// Invalid state (reset receive) - invalid checksum
 						state = WAIT_START;
 					} else {
@@ -151,12 +173,35 @@ namespace acp_messenger_gep_stream {
 					}
 				}
 
-				// After receiving the message start byte, the receive of the message is restarted
+				// After receiving MESSAGE_START_BYTE, the receive of the message is restarted
 				if (dataByte == MESSAGE_START_BYTE) {
-					state = WAIT_START;
+					state = WAIT_DESTINATION_ID;
+					continue;
 				}
 
-				if ((state == WAIT_START) && (dataByte == MESSAGE_START_BYTE)) {
+				// Nothing to do here - dataByte is not MESSAGE_START_BYTE due to the previous if-statement
+				if (state == WAIT_START) {
+					continue;
+				}
+
+				if (state == WAIT_DESTINATION_ID) {
+					const uint8_t inByte = (uint8_t)dataByte;
+					messageDestinationId = inByte / 16;
+
+					// Check whether received byte is well formed data byte (if not, reset receive)
+					if (messageDestinationId != ((inByte ^ 0x0F) & 0x0F)) {
+						state = WAIT_START;
+						continue;
+					}
+
+					// Check whether the message is targeted for this messenger (if not, reset receive)
+					if (MESSENGER_ID > 0) {
+						if ((messageDestinationId > 0) && (messageDestinationId != MESSENGER_ID)) {
+							state = WAIT_START;
+							continue;
+						}
+					}
+
 					state = WAIT_MESSAGE_BYTE_HIGH;
 					messageLength = 0;
 					continue;
@@ -181,9 +226,8 @@ namespace acp_messenger_gep_stream {
 					const uint8_t inByte = (uint8_t)dataByte;
 					const uint8_t nibble = inByte / 16;
 
-					// Check whether received byte is well formed data byte
+					// Check whether received byte is well formed data byte (if not, reset receive)
 					if (nibble != ((inByte ^ 0x0F) & 0x0F)) {
-						// Invalid state (reset receive)
 						state = WAIT_START;
 						continue;
 					}
@@ -238,14 +282,14 @@ namespace acp_messenger_gep_stream {
 	/********************************************************************************
 	 * View for a stream messenger using a GEP protocol
 	 ********************************************************************************/
-	template<int MAX_MESSAGE_SIZE> class TGEPStreamMessenger {
+	template<int MESSENGER_ID, int MAX_MESSAGE_SIZE> class TGEPStreamMessenger {
 	private:
 		// The controller
-		GEPStreamController<MAX_MESSAGE_SIZE>& controller;
+		GEPStreamController<MESSENGER_ID, MAX_MESSAGE_SIZE>& controller;
 	public:
 		//--------------------------------------------------------------------------------
 		// Constructs view associated with a controller
-		inline TGEPStreamMessenger(GEPStreamController<MAX_MESSAGE_SIZE>& controller): controller(controller) {
+		inline TGEPStreamMessenger(GEPStreamController<MESSENGER_ID, MAX_MESSAGE_SIZE>& controller): controller(controller) {
 			// Nothing to do
 		}
 
@@ -263,14 +307,14 @@ namespace acp_messenger_gep_stream {
 
 		//--------------------------------------------------------------------------------
 		// Sends a message without a tag
-		inline void sendMessage(const char* message, int messageLength) {
-			controller.sendMessage(message, messageLength, -1);
+		inline void sendMessage(uint8_t destinationId, const char* message, int messageLength) {
+			controller.sendMessage(destinationId, message, messageLength, -1);
 		}
 
 		//--------------------------------------------------------------------------------
 		// Sends a message with a tag
-		inline void sendMessage(const char* message, int messageLength, unsigned int tag) {
-			controller.sendMessage(message, messageLength, tag);
+		inline void sendMessage(uint8_t destinationId, const char* message, int messageLength, unsigned int tag) {
+			controller.sendMessage(destinationId, message, messageLength, tag);
 		}
 	};
 

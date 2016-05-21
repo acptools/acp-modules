@@ -18,9 +18,14 @@
 		<component>
 			<name>registryProtocol</name>
 			<type>acp.messenger.registry_access_protocol</type>
+			<properties>
+				<property name="ChangeWatchSize">10</property>
+			</properties>
 			<events>
-				<event name="OnWriteRegister">onWriteRegister</event>
-				<event name="OnReadRegister">onReadRegister</event>
+				<event name="OnWriteIntRegister">onWriteIntRegister</event>
+				<event name="OnReadIntRegister">onReadIntRegister</event>
+				<event name="OnWriteBinRegister">onWriteBinRegister</event>
+				<event name="OnReadBinRegister">onReadBinRegister</event>
 			</events>
 		</component>	
 	</components>

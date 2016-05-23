@@ -85,6 +85,8 @@ namespace acp_common_sequence_switch {
 				state &= B10111111;
 				acp::disableLooper(looperId);
 			}
+
+			updatePin();
 		}
 
 		// Looper for changing switch

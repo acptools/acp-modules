@@ -39,7 +39,7 @@ public:
 	bool (*writeIntRegisterEvent)(unsigned int registerId, long value);
 
 	// Processing handler invoked when read of an integer register value is requested.
-	long (*readIntRegisterEvent)(unsigned int registerId);
+	long (*readIntRegisterEvent)(unsigned int registerId, bool& outValid);
 
 	// Processing handler invoked when write of a binary register value is requested.
 	bool (*writeBinRegisterEvent)(unsigned int registerId, const char* data,
@@ -54,7 +54,7 @@ public:
 /********************************************************************************
  * View implementing handler for a message based simple registry access protocol.
  ********************************************************************************/
-template<int CHANGE_WATCH_SIZE> class TRegistryAccessProtocol {
+template<int CHANGE_WATCH_SIZE, bool MARK_ON_WRITE> class TRegistryAccessProtocol {
 private:
 	// The controller
 	RegistryAccessProtocolController& controller;
@@ -348,7 +348,14 @@ public:
 				return;
 			}
 
-			const long value = controller.readIntRegisterEvent(registerId);
+			bool outValid = true;
+			const long value = controller.readIntRegisterEvent(registerId, outValid);
+
+			if (!outValid) {
+				createFailResponse(responseBuffer, responseSize);
+				return;
+			}
+
 			uint8_t writtenBytes = writeEncodedLong(responseBuffer + 1,
 					responseSize - 1, value);
 			if (writtenBytes == 0) {
@@ -375,6 +382,9 @@ public:
 
 			if (controller.writeIntRegisterEvent(registerId, value)) {
 				*responseBuffer = REQUEST_OK_RESPONSE;
+				if (MARK_ON_WRITE) {
+					markModifiedRegister(registerId);
+				}
 			} else {
 				*responseBuffer = UNWRITABLE_REGISTER_RESPONSE;
 			}
@@ -415,6 +425,9 @@ public:
 			if (controller.writeBinRegisterEvent(registerId, request,
 					requestSize)) {
 				*responseBuffer = REQUEST_OK_RESPONSE;
+				if (MARK_ON_WRITE) {
+					markModifiedRegister(registerId);
+				}
 			} else {
 				*responseBuffer = UNWRITABLE_REGISTER_RESPONSE;
 			}

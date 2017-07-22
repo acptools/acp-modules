@@ -14,9 +14,14 @@ namespace acp_common_measured_switch {
 		byte pin;
 
 		// State of the switch
-		byte state;
+		struct {
+			// Indicates whether switch has inverted logic
+			bool invertedLogic: 1;
+			// Indicates whether switch is in ON state.
+			bool on: 1;
+		} state;
 
-		// Celkovy cas v sekundach, aky bolo zariadenie v stave ON
+		// Total time that device was in ON state
 		unsigned long runningTimeInSeconds;
 
 		// Time when the state of switch changed from OFF to ON
@@ -29,14 +34,14 @@ namespace acp_common_measured_switch {
 			millisWhenTurnOn = 0;
 			this->pin = (byte)pin;
 			pinMode(pin, OUTPUT);
-			state = invertedLogic ? B00000010 : B00000000;
+			state.invertedLogic = invertedLogic;
 			setState(onState);
 		}
 
 		//--------------------------------------------------------------------------------
 		// Returns whether the switch is in the ON state.
 		inline boolean isOn() {
-			return state & B00000001;
+			return state.on;
 		}
 
 		//--------------------------------------------------------------------------------
@@ -46,8 +51,8 @@ namespace acp_common_measured_switch {
 				millisWhenTurnOn = millis();
 			}
 
-			state |= B00000001;
-			digitalWrite(pin, (state & B00000010) ? LOW : HIGH);
+			state.on = true;
+			digitalWrite(pin, state.invertedLogic ? LOW : HIGH);
 		}
 
 		//--------------------------------------------------------------------------------
@@ -57,8 +62,8 @@ namespace acp_common_measured_switch {
 				runningTimeInSeconds += ((millis() - millisWhenTurnOn) + 500L /*rounding*/) / 1000L;
 			}
 
-			state &= B11111110;
-			digitalWrite(pin, (state & B00000010) ? HIGH : LOW);
+			state.on = false;
+			digitalWrite(pin, state.invertedLogic ? HIGH : LOW);
 		}
 
 		//--------------------------------------------------------------------------------

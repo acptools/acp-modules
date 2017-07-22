@@ -69,7 +69,7 @@ private:
 	// Decodes ID of register.
 	inline int readRegisterId(const char* &request, int &requestSize) {
 		if (requestSize == 0) {
-			return false;
+			return -1;
 		}
 
 		uint8_t hByte = (uint8_t)(*request);
@@ -200,7 +200,7 @@ private:
 	}
 
 	//--------------------------------------------------------------------------------
-	// Creates response indicating that the request failed.
+	// Marks that value of register is read.
 	inline void markRegisterRead(int registerId) {
 		if ((registerId >= CHANGE_WATCH_SIZE) || (registerId < 0)) {
 			return;
@@ -211,7 +211,8 @@ private:
 	}
 
 	//--------------------------------------------------------------------------------
-	// The register index to a next register whose (modified&unread) bit is set
+	// Moves the register index to the next register whose (modified&unread) bit is set,
+	// and return whether the operation succeeded, i.e., a register with specified properties is found.
 	inline bool moveRegisterIndex() {
 		if (CHANGE_WATCH_SIZE == 0) {
 			return false;
@@ -310,6 +311,14 @@ public:
 
 		// Action for retrieving change hint
 		if (requestCode == GET_CHANGE_HINT_REQUEST) {
+			// handle the case when the request contains id of register that should be marked as read (without read request)
+			if (requestSize > 0) {
+				int confirmedRegisterId = readRegisterId(request, requestSize);
+				if (confirmedRegisterId >= 0) {
+					markRegisterRead(confirmedRegisterId);
+				}
+			}
+
 			int hint = -1;
 			if (moveRegisterIndex()) {
 				hint = watchIdx;

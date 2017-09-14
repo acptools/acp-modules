@@ -16,20 +16,31 @@ namespace acp_common_sequence_switch {
 		// Controlled pin
 		byte pin;
 
-		// Duration of sequence unit in 10-milliseconds
+		// Duration of base unit as multiples of 10 milliseconds.
 		byte baseDuration;
 
 		// Switch sequence. Sequence consists of 4 parts (enabled, disabled, enabled, disabled).
-		// Duration of each part is determined consists of given base units.
+		// Duration of each part is determined in base units.
 		byte sequence[4];
 
-		// State of controller (7th bit: inverted logic, 6th bit: enabled, bit 0-1: sequence position
-		byte state;
+		// State of the switch
+		struct {
+			// Indicates whether switch has inverted logic
+			bool invertedLogic: 1;
+			// Indicates whether sequencing is active (enabled)
+			bool enabled: 1;
+			// Indicates whether switch is forced to be in ON state.
+			bool on: 1;
+			// Indicates whether sequence is invalid
+			bool invalidSequence: 1;
+			// Sequence position
+			byte seqPosition: 2;
+		} state;
 
 		// Updates pin state according to state of switch
 		inline void updatePin() {
-			boolean pinState = ((state & B01000000) != 0) && ((state & B00000001) == 0);
-			if (state & B10000000) {
+			boolean pinState = state.on || (state.enabled && (state.seqPosition % 2 == 0));
+			if (state.invertedLogic) {
 				pinState = !pinState;
 			}
 			digitalWrite(pin, (pinState) ? HIGH : LOW);
@@ -41,10 +52,15 @@ namespace acp_common_sequence_switch {
 		// Constructs a sequence switch controller
 		SequenceSwitchController(int pin, boolean invertedLogic, byte baseDuration) {
 			memset(sequence, 0, sizeof(sequence));
-			this->baseDuration = baseDuration;
+			this->baseDuration = max(1, baseDuration);
 			this->pin = (byte)pin;
 			pinMode(pin, OUTPUT);
-			state = invertedLogic ? B10000000 : B00000000;
+
+			state.enabled = false;
+			state.on = false;
+			state.invertedLogic = invertedLogic;
+			state.seqPosition = 0;
+			state.invalidSequence = true;
 			updatePin();
 		}
 
@@ -61,50 +77,54 @@ namespace acp_common_sequence_switch {
 
 		// Sets the sequence
 		inline void setSequence(byte enabled1, byte disabled1, byte enabled2, byte disabled2) {
+			setEnabled(false);
+
 			sequence[0] = enabled1;
 			sequence[1] = disabled1;
 			sequence[2] = enabled2;
 			sequence[3] = disabled2;
+
+			state.invalidSequence = (enabled1+disabled1+enabled2+disabled2 == 0);
 		}
 
-		// Returns whether switch is enabled.
-		inline boolean isEnabled() {
-			return state & B01000000;
-		}
-
-		// Enables/disables the switch
+		// Enables/disables sequencing
 		void setEnabled(boolean newEnabled) {
-			if (isEnabled() == newEnabled) {
+			if (state.enabled == newEnabled) {
 				return;
 			}
 
-			if (newEnabled) {
-				state |= B01000011;
+			state.enabled = newEnabled;
+			state.seqPosition = 0;
+			if (state.enabled && (!state.invalidSequence)) {
 				acp::enableLooper(looperId);
 			} else {
-				state &= B10111111;
 				acp::disableLooper(looperId);
 			}
 
 			updatePin();
 		}
 
+		// Sets the forced on/off state. Set true for forced ON state and false for forced OFF state.
+		void setState(boolean onState) {
+			state.on = onState;
+			updatePin();
+		}
+
 		// Looper for changing switch
 		inline unsigned long looper() {
-			if (!isEnabled()) {
+			if (!state.enabled || state.invalidSequence) {
 				return baseDuration;
 			}
 
 			for (int i=0; i<4; i++) {
-				const byte sequencePos = ((state % 4) + 1) % 4;
-				state = (state & B11111100) + sequencePos;
-				if (sequence[sequencePos] != 0) {
+				state.seqPosition = (state.seqPosition + 1) % 4;
+				if (sequence[state.seqPosition] != 0) {
 					break;
 				}
 			}
 
 			updatePin();
-			return 10ul * baseDuration * sequence[state % 4];
+			return 10ul * baseDuration * sequence[state.seqPosition];
 		}
 	};
 
@@ -124,7 +144,7 @@ namespace acp_common_sequence_switch {
 
 		// Returns whether the sequence switch is enabled.
 		inline boolean isEnabled() {
-			return controller.isEnabled();
+			return controller.state.enabled;
 		}
 
 		// Enables the sequence switch
@@ -150,6 +170,11 @@ namespace acp_common_sequence_switch {
 		// Sets the sequence
 		inline void setSequence(byte enabled1, byte disabled1, byte enabled2, byte disabled2) {
 			controller.setSequence(enabled1, disabled1, enabled2, disabled2);
+		}
+
+		// Sets the forced on/off state. This state overrides states defined by sequence.
+		inline void setState(boolean onState) {
+			controller.setState(onState);
 		}
 	};
 }

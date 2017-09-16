@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<component-type name="acp.common.pulse_sensor">
+	<description>Simple pulse sensor.</description>
+	<view>
+		<includes>
+			<include>PulseSensor.h</include>
+		</includes>
+		<class>acp_common_pulsesensor::TPulseSensor</class>
+		<template-args>
+			<arg type="property">TriggerPin</arg>
+			<arg type="property">PulsePin</arg>
+			<arg type="property">TriggerMicros</arg>
+			<arg type="property">MaxPulseMillis</arg>
+		</template-args>
+	</view>
+	<properties>
+		<property>
+			<name>TriggerPin</name>
+			<type>pin</type>
+			<description>The pin used to trigger a pulse.</description>
+		</property>
+		<property>
+			<name>PulsePin</name>
+			<type>pin</type>
+			<description>The pin where pulse is detected.</description>
+		</property>
+		<property>
+			<name>TriggerMicros</name>
+			<type>unsigned int</type>
+			<value type="default">10</value>
+			<description>Length of trigger pulse in microseconds.</description>
+		</property>		
+		<property>
+			<name>MaxPulseMillis</name>
+			<type>unsigned int</type>
+			<value type="default">1000</value>
+			<description>Maximal pulse length in milliseconds.</description>
+		</property>
+	</properties>
+</component-type>

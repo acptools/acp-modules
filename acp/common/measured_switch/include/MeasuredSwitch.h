@@ -95,6 +95,18 @@ namespace acp_common_measured_switch {
 		//--------------------------------------------------------------------------------
 		// Returns the total duration in seconds when the switch was in the ON state.
 		inline unsigned long getRunningTime() {
+			return getUptime();
+		}
+
+		//--------------------------------------------------------------------------------
+		// Set initial value for counter measuring total duration of ON state in seconds.
+		inline void setRunningTime(unsigned long value) {
+			setUptime(value);
+		}
+
+		//--------------------------------------------------------------------------------
+		// Returns the total uptime in seconds.
+		inline unsigned long getUptime() {
 			if (isOn()) {
 				return runningTimeInSeconds + ((millis() - millisWhenTurnOn) + 500L /*rounding*/) / 1000L;
 			} else {
@@ -103,8 +115,8 @@ namespace acp_common_measured_switch {
 		}
 
 		//--------------------------------------------------------------------------------
-		// Set initial value for counter measuring total duration of ON state in seconds.
-		inline void setRunningTime(unsigned long value) {
+		// Set initial value for counter measuring total uptime in seconds.
+		inline void setUptime(unsigned long value) {
 			runningTimeInSeconds = value;
 			millisWhenTurnOn = millis();
 		}

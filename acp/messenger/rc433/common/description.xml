@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<library name="acp.messenger.rc433.common">
+	<description>Library with basic implementation of a RC433 module comunication components.</description>
+</library>
